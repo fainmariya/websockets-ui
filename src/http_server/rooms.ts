@@ -1,3 +1,6 @@
+
+
+
 export type RoomUser= {
     name: string;
     index: string | number; // id player(from reg)
