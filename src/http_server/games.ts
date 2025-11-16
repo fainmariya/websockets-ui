@@ -43,7 +43,24 @@ function createEmptyBoard(): CellState[][] {
     Array.from({ length: BOARD_SIZE }, () => "empty" as CellState)
   );
 }
-
+function getShipCells(ship: Ship): { x: number; y: number }[] {
+    const cells: { x: number; y: number }[] = [];
+    const { position, length, direction } = ship;
+    const startX = position.x;
+    const startY = position.y;
+  
+    // ВАЖНО: это полностью совпадает с setShipsForPlayer:
+    // const xx = ship.direction ? x : x + i;  // true = vertical
+    // const yy = ship.direction ? y + i : y;  // false = horizontal
+    for (let i = 0; i < length; i++) {
+      const xx = direction ? startX : startX + i;   // true = вертикальный
+      const yy = direction ? startY + i : startY;   // false = горизонтальный
+      cells.push({ x: xx, y: yy });
+    }
+  
+    return cells;
+  }
+  
 // to find a ship by coordinate
 function getShipAt(
     playerState: GamePlayerState,
@@ -51,19 +68,8 @@ function getShipAt(
     y: number
   ): Ship | undefined {
     return playerState.ships.find((ship) => {
-      const { position, direction, length } = ship;
-      const startX = position.x;
-      const startY = position.y;
-  
-      if (direction) {
-        // true = горизонтальный
-        if (x !== startX) return false;
-        return y >= startY && y < startY + length;
-      } else {
-        // false = вертикальный
-        if (y !== startY) return false;
-        return x >= startX && y < startX + length;
-      }
+      const cells = getShipCells(ship);
+      return cells.some((c) => c.x === x && c.y === y);
     });
   }
   function isShipKilled(
@@ -74,14 +80,11 @@ function getShipAt(
     const ship = getShipAt(playerState, x, y);
     if (!ship) return false;
   
-    const { position, direction, length } = ship;
-    const startX = position.x;
-    const startY = position.y;
+    const cells = getShipCells(ship);
   
-    for (let i = 0; i < length; i++) {
-      const cx = direction ? startX + i : startX;
-      const cy = direction ? startY : startY + i;
-      if (playerState.board[cy][cx] !== "hit") {
+    for (const cell of cells) {
+      const state = playerState.board[cell.y][cell.x]; // board[y][x]
+      if (state !== "hit") {
         return false;
       }
     }
@@ -96,27 +99,19 @@ function getShipAt(
     const ship = getShipAt(playerState, x, y);
     if (!ship) return [];
   
-    const { position, direction, length } = ship;
-    const startX = position.x;
-    const startY = position.y;
+    const cells = getShipCells(ship);
   
-    let shipMinX: number;
-    let shipMaxX: number;
-    let shipMinY: number;
-    let shipMaxY: number;
+    // находим прямоугольник, который покрывает весь корабль
+    let shipMinX = Infinity;
+    let shipMaxX = -Infinity;
+    let shipMinY = Infinity;
+    let shipMaxY = -Infinity;
   
-    if (direction) {
-      
-      shipMinX = startX;
-      shipMaxX = startX ;
-      shipMinY = startY;
-      shipMaxY = startY + length - 1;
-    } else {
-   
-      shipMinX = startX;
-      shipMaxX = startX + length - 1;
-      shipMinY = startY;
-      shipMaxY = startY;
+    for (const c of cells) {
+      if (c.x < shipMinX) shipMinX = c.x;
+      if (c.x > shipMaxX) shipMaxX = c.x;
+      if (c.y < shipMinY) shipMinY = c.y;
+      if (c.y > shipMaxY) shipMaxY = c.y;
     }
   
     const height = playerState.board.length;
@@ -131,8 +126,8 @@ function getShipAt(
   
     for (let yy = rectMinY; yy <= rectMaxY; yy++) {
       for (let xx = rectMinX; xx <= rectMaxX; xx++) {
-        const insideShip =
-          xx >= shipMinX && xx <= shipMaxX && yy >= shipMinY && yy <= shipMaxY;
+        // если это сама палуба — не трогаем
+        const insideShip = cells.some((c) => c.x === xx && c.y === yy);
         if (insideShip) continue;
   
         const cell = playerState.board[yy][xx];
