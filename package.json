@@ -5,8 +5,8 @@
     "main": "index.js",
     "type": "module",
     "scripts": {
-        "start": "node ./index.js",
-        "start:dev": "nodemon ./index.js",
+        "start": "tsx index.js",
+  "start:dev": "nodemon --exec tsx index.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "author": "Andrei Auchynnikau",
@@ -14,10 +14,11 @@
     "license": "ISC",
     "devDependencies": {
         "@types/ws": "^8.18.1",
-        "nodemon": "^2.0.16"
+        "nodemon": "^2.0.16",
+        "tsx": "^4.20.6",
+        "typescript": "^5.9.3"
     },
     "dependencies": {
-        "typescript": "^5.9.3",
         "ws": "^8.18.3"
     }
 }

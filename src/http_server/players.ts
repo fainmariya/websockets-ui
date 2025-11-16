@@ -37,12 +37,14 @@ export function registerPlayer(name: string, password: string) {
     }
     
     // return the winners table 
+    
+
     export function getWinners() {
-      return Array.from(players.values()).map((p) => ({
-        name: p.name,
-        wins: p.wins,
-      }));
-    }
+        return Array.from(players.values()).map((p) => ({
+          name: p.name,
+          wins: p.wins,
+        }));
+      }
     
     // increase the number of victorie
     export function addWin(name: string) {
